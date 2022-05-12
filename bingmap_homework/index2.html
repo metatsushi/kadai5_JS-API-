@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Basic Geocode Example</title>
+    <style>html,body,#main{height:100%;}body{padding:0;margin:0;background:#333;}h1{padding:0;margin:0;font-size:100%;color:white;}p{margin:0}</style>
+</head>
+<body>
+
+<!-- MAP[START] -->
+<header>
+    <h1 id="h1">Basic Geocode Example （Search）</h1>
+    <p><input type="text" id="location" value="Seattle"> <button id="get">検索</button></p>
+</header>
+<div id="main">
+    <div id="myMap" style='width:100%;height:90%;'></div>
+</div>
+<!-- MAP[END] -->
+<!-- Jqueryの読み出し -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src='https://www.bing.com/api/maps/mapcontrol?key=Atj6nTk9XJ78f8jX3KdI98GK8zSEQtwfUuqLGPiM1xZlUigk9mwQUrRx8YJqGkmj&callback=GetMap' async defer></script>
+<script>
+    /* GetMap()を実行*/
+    let map;             //MapObject用
+    let searchManager;   //SearchObject用
+    function GetMap() {
+        //Map生成
+        map = new Microsoft.Maps.Map('#myMap', {
+            zoom: 15,
+            mapTypeId: Microsoft.Maps.MapTypeId.load
+        });
+        //検索モジュール指定
+        Microsoft.Maps.loadModule('Microsoft.Maps.Search',  ()=> {
+            //searchManagerをインスタンス化してGeocode,ReverseGeocodeを使えるように
+            searchManager = new Microsoft.Maps.Search.SearchManager(map);
+            //Geocode：住所から検索
+            geocodeQuery($('#location').val());
+        });
+    }
+
+    // 検索ボタンクリック
+    $('#get').on('click', function(){
+        //Geocode:住所から検索
+        geocodeQuery($('#location').val());
+    })
+
+    //住所から緯度経度を取得
+    function geocodeQuery(query) {
+        if(searchManager) {
+            //住所から緯度経度を検索
+            searchManager.geocode({
+                where: query,       //検索文字列
+                callback: function (r) { //検索結果を"( r )" の変数で取得
+                    //最初の検索取得結果をMAPに表示
+                    if (r && r.results && r.results.length > 0) {
+                        //Pushpinを立てる
+                        const pin = new Microsoft.Maps.Pushpin(r.results[0].location);
+                        map.entities.push(pin);
+                        //map表示位置を再設定
+                        map.setView({ bounds: r.results[0].bestView});
+                    }
+                },
+                errorCallback: function (e) {
+                    alert("見つかりません");
+                }
+            });
+        }
+    }
+
+</script>
+</body>
+</html>
